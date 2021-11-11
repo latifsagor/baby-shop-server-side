@@ -28,12 +28,20 @@ async function run() {
     const database = client.db('Bike_Shop')
     const productsCollection = database.collection('products')
     const orderCollection = database.collection('orders')
+    const customerInformation = database.collection('order_information')
 
     // Create Api
     app.get('/products', async (req, res) => {
       const cursor = await productsCollection.find({}).toArray()
       //   console.log(cursor)
       res.json(cursor)
+    })
+
+    // Product added
+    app.post('/addProduct', (req, res) => {
+      productsCollection.insertOne(req.body).then((result) => {
+        res.send(result.insertedId)
+      })
     })
 
     // Order collection by Buy Now Button
@@ -44,7 +52,9 @@ async function run() {
 
     // Order Review
     app.get('/myOrders', async (req, res) => {
-      const result = await orderCollection.find({}).toArray()
+      const email = req?.query?.email
+      const query = { email: email }
+      const result = await orderCollection.find(query).toArray()
       res.send(result)
     })
 
@@ -53,6 +63,20 @@ async function run() {
       const id = req?.params?.id
       const query = { _id: ObjectId(id) }
       const result = await orderCollection.deleteOne(query)
+      res.json(result)
+    })
+
+    // Customer information
+    app.post('/placeOrder', async (req, res) => {
+      const result = await customerInformation.insertOne(req?.body)
+      res.json(result)
+    })
+
+    // Manage all products
+    app.get('/manageOrders', async (req, res) => {
+      const email = req?.query?.email
+      const query = { email: email }
+      const result = await customerInformation.find(query).toArray()
       res.json(result)
     })
   } finally {
